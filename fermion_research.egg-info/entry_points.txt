@@ -1,0 +1,5 @@
+[console_scripts]
+fermion = fermion.cli:main
+phonon = fermion.phonon_cli:main_phonon
+phonon-1 = fermion.phonon_cli:main_phonon1
+phonon-2 = fermion.phonon_cli:main_phonon2

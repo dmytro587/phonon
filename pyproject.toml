@@ -1,0 +1,98 @@
+# BRAND GREP POINT 1/3: the [project] name below and the console-script name
+# are the pip-facing brand. NAME FINAL 2026-07-24: fermion (working slug ->
+# interim name -> fermion, all same day; chain in RELEASE_RUNBOOK.md §5, which
+# also documents this file, fermion/_brand.py, directory rename, wheel rebuild).
+# 2026-07-27: the *distribution* name is `fermion-research` (bare `fermion` was
+# taken on PyPI); the command and the import name are both still `fermion`.
+[build-system]
+# >=77 for PEP 639 (`license` as an SPDX expression + `license-files`), which
+# is what puts a machine-readable Apache-2.0 on the PyPI page.
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# DO NOT "FIX" THIS BACK TO "fermion". The PyPI distribution name is
+# `fermion-research` because the bare `fermion` name was already claimed by
+# another (release-less) project on PyPI, which returned
+# `403 The user 'fermion' isn't allowed to upload to project 'fermion'`.
+# The distribution name is the ONLY thing that changed: the import package is
+# still `fermion` and the console script below is still `fermion`, so
+# `pip install fermion-research` followed by `fermion chat` is correct.
+name = "fermion-research"
+version = "0.2.9"
+description = "Phonon speech recognition engine and Neutrino language models from Fermion Research, on CPU, Apple silicon and NVIDIA GPUs"
+readme = "README.md"
+# SPDX expression + the Apache-2.0 text that already ships in the wheel.
+# PEP 639 forbids pairing this with a `License ::` trove classifier, so the
+# licence facet on PyPI comes from the expression, not from `classifiers`.
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.10"
+authors = [{name = "Fermion Research"}]
+maintainers = [{name = "Fermion Research"}]
+keywords = [
+    "llm", "quantization", "ternary", "sub-2-bit", "bitnet",
+    "inference", "transformers", "openai-api", "cpu-inference", "edge-ai",
+    "speech-recognition", "asr", "speech-to-text", "mlx", "apple-silicon",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    # Intel Macs (0.2.8): PyTorch's last macOS x86-64 wheels are 2.2.2 (Python 3.10-3.12), built against NumPy 1.x, so that
+    # one platform resolves torch 2.2, numpy 1.x and transformers 5.0; every other platform keeps the pins unchanged.
+    "torch>=2.3; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "torch>=2.2,<2.3; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    # transformers 5.1+ switches torch off below 2.4 (5.16+: 2.5) at import; 5.0 accepts torch 2.2 and carries Parakeet
+    "transformers>=5.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "transformers>=5.0,<5.1; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    "numpy>=1.26; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "numpy>=1.26,<2; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    "huggingface_hub>=0.23",
+]
+
+# BRAND GREP POINT 3/3 is fermion/_brand.py; these are the public venues the
+# PyPI sidebar links to. Whatever ships here is permanent for that version.
+[project.urls]
+Homepage = "https://fermionresearch.com"
+Documentation = "https://fermionresearch.com/docs/"
+Repository = "https://github.com/fermionresearch/phonon"
+Models = "https://huggingface.co/FermionResearch"
+Receipts = "https://github.com/fermionresearch"
+"Issue Tracker" = "https://github.com/fermionresearch/phonon/issues"
+
+[project.scripts]
+fermion = "fermion.cli:main"
+phonon = "fermion.phonon_cli:main_phonon"
+phonon-2 = "fermion.phonon_cli:main_phonon2"
+phonon-1 = "fermion.phonon_cli:main_phonon1"
+
+[tool.setuptools.packages.find]
+include = ["fermion*"]
+
+# The tv4z transport decoder (fermion/bin/tv4z-<platform> + its .sha256 pin)
+# ships as package data so `resolve_model` can decode the 2.56 GB transport
+# locally to the runnable .bin. Only Apple Silicon has a build (the decoder
+# links CommonCrypto for MD5); every other platform falls back to downloading
+# the raw .bin, so the wheel stays py3-none-any and the binary is inert there.
+[tool.setuptools.package-data]
+# bin/* = the tv4z transport decoder (Neutrino).  The Phonon-2 CPU engine's kernel binaries (packed five-value int8 GEMM +
+# C greedy TDT loop; macOS arm64 + x86_64 / Linux x86-64 / Linux aarch64 / Windows x64) ship beside their loader with sha256 pins that
+# the loader verifies before dlopen (fermion/_speech/_engine_phonon2_cpu/).  Wheel stays py3-none-any; a platform without its
+# binary falls back to the fp32 tier-1 path, never refuses.
+fermion = ["bin/*", "_speech/_engine_phonon2_cpu/*.dylib", "_speech/_engine_phonon2_cpu/*.so",
+           "_speech/_engine_phonon2_cpu/*.dll", "_speech/_engine_phonon2_cpu/SHA256SUMS.txt"]
