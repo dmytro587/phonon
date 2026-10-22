@@ -9,3 +9,7 @@ __pycache__/
 
 # Release binaries are attached to GitHub Releases, never to the git tree.
 *.dmg
+
+.cache/
+.vendor/
+
